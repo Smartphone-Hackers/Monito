@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  Add Expenses
+{% endblock %}
+{% block content %}
+<div>Add Expenses
+  <div class="page-title-subheading">Add New Expenses.</div>
+</div>
+<div class="page-title-actions">
+	</div>
+</div>
+</div>
+<ul class="body-tabs body-tabs-layout tabs-animated body-tabs-animated nav">
+</ul>
+<div class="tab-content">
+	<div class="tab-pane tabs-animation fade show active" id="tab-content-0" role="tabpanel">
+		<div class="main-card mb-3 card">
+			<div class="card-body">
+				<h5 class="card-title">Add Expenses</h5>
+        {% if messages %}
+          {% for message in messages %}
+			<div class="alert alert-info">
+				{{ message }}
+			</div>
+          {% endfor %}
+        {% endif %}
+				<form method="post" enctype="multipart/form-data">
+					<div class="form-row">
+            			{% csrf_token %}
+						<div class="col-md-3">
+							<div class="position-relative form-group">
+								<label>Name</label>
+								<select name="name" class="form-control" required>
+                  <option>Please Select name</option>
+                  {% for data in datas %}
+                      {% if expense.name == data %}
+                        <option value="{{data.name}}" selected>{{data.name}}</option>
+                      {% else %}
+                        <option value="{{data.name}}">{{data.name}}</option>
+                      {% endif %}
+                  {% endfor %}
+                </select>
+							</div>
+						</div>
+            <div class="col-md-3">
+							<div class="position-relative form-group">
+								<label for="examplePassword11" class="">Date</label>
+								<input type="date" required class="form-control" value="{{expense_date}}" name="date">
+							</div>
+            </div>
+            <div class="col-md-3">
+							<div class="position-relative form-group">
+								<label for="examplePassword11" class="">Item Name</label>
+								<input type="text" required class="form-control" name="item_name" value="{{expense.item_name}}" placeholder="Enter Item Name">
+							</div>
+            </div>
+                        <div class="col-md-3">
+							<div class="position-relative form-group">
+								<label for="examplePassword11" class="">Item Price</label>
+								<input type="number" required step="0.01" min="0" max="1000" class="form-control" value="{{expense.item_price}}" name="item_price" placeholder="Enter Item Price">
+							</div>
+						</div>
+          			</div>
+					<button class="mt-2 btn btn-primary">Submit</button>
+                </form>
+                <br>
+                <h5>This Month - Total Expenses ${{this_month_expense}} </h5>
+                <div class="table-responsive">
+                    <table class="mb-0 table">
+                        <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Item Name</th>
+                            <th>Item Price</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in expenses %}
+                                <tr>
+                                    <td>{{ expense.date }}</td>
+                                    <td>{{ expense.name.name }}</td>
+                                    <td>{{ expense.item_name }}</td>
+                                    <td>$ {{ expense.item_price }}</td>
+                                    <td>
+                                      <a href="/add-expense-edit/{{expense.id}}" class="mb-2 mr-2 border-0 btn-transition btn btn-outline-success">Edit</a>
+                                    </td>
+                                    <td>
+                                      <a href="/add-expense/{{expense.id}}" class="mb-2 mr-2 border-0 btn-transition btn btn-outline-danger">delete</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+			</div>
+		</div>
+</div>
+</div>
+{% endblock %}

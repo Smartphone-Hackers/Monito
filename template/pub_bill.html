@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  PUB Bill
+{% endblock %}
+{% block content %}
+<div>PUB Bill
+  <div class="page-title-subheading">Add PUB Bill.</div>
+</div>
+<div class="page-title-actions">
+	</div>
+</div>
+</div>
+<ul class="body-tabs body-tabs-layout tabs-animated body-tabs-animated nav">
+</ul>
+<div class="tab-content">
+	<div class="tab-pane tabs-animation fade show active" id="tab-content-0" role="tabpanel">
+		<div class="main-card mb-3 card">
+			<div class="card-body">
+				<h5 class="card-title">PUB Bill</h5>
+        {% if messages %}
+          {% for message in messages %}
+			<div class="alert alert-info">
+				{{ message }}
+			</div>
+          {% endfor %}
+        {% endif %}
+				<form method="post" enctype="multipart/form-data">
+					<div class="form-row">
+            			{% csrf_token %}
+						<div class="col-md-6">
+							<div class="position-relative form-group">
+								<label>EB Date</label>
+								<input type="date" required class="form-control" value="{{bill_date}}" name="eb_date">
+							</div>
+						</div>
+            			<div class="col-md-6">
+							<div class="position-relative form-group">
+								<label for="examplePassword11" class="">Total Units</label>
+								<input type="number" required step="0.01" min="0" max="100000" value="{{get_bill.total_units}}" class="form-control" name="total_units" placeholder="Enter Previous Month Units">
+							</div>
+                        </div>
+                        <div class="col-md-4">
+							<div class="position-relative form-group">
+								<label for="examplePassword11" class="">Refuse Removal Amount</label>
+								<input type="number" required step="0.01" min="0" max="100000" value="{{get_bill.refuse_amt}}" class="form-control" name="removal_amt" placeholder="Enter Refuse Removal Amount">
+							</div>
+                        </div>
+                        <div class="col-md-4">
+							<div class="position-relative form-group">
+								<label for="examplePassword11" class="">Water Utility Amount</label>
+								<input type="number" required step="0.01" min="0" max="100000" value="{{get_bill.water_amt}}" class="form-control" name="water_amt" placeholder="Enter Water Utility Amount">
+							</div>
+                        </div>
+                        <div class="col-md-4">
+							<div class="position-relative form-group">
+								<label for="examplePassword11" class="">GST</label>
+								<input type="number" required step="0.01" min="0" max="100000" value="{{get_bill.gst}}" class="form-control" name="gst" placeholder="Enter GST">
+							</div>
+                        </div>
+          			</div>
+					<button class="mt-2 btn btn-primary">Submit</button>
+                </form> <br>
+                <div class="table-responsive">
+                    <table class="mb-0 table">
+                        <thead>
+                        <tr>
+                            <th>EB Date</th>
+                            <th>Total Units</th>
+                            <th>Refuse Removal</th>
+                            <th>Water Utility</th>
+                            <th>GST</th>
+                            <td>Total Amount</td>
+                            <td>Merge Food Expense - {{year}}</td>
+                            <td>Merge</td>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in pubbill %}
+                                <tr>
+                                    <td>{{ bill.date }}</td>
+                                    <td>{{ bill.total_units }}</td>
+                                    <td>$ {{ bill.refuse_amt }}</td>
+                                    <td>$ {{ bill.water_amt }}</td>
+                                    <td>{{ bill.gst }}%</td>
+                                    <td>$ {{ bill.total_amt }} </td>
+                                    <form method="get">
+                                      <td>
+                                          <select name="month" class="form-control" required>
+                                            <option value="">Choose Month</option>
+                                            {% for month in months %}
+                                                <option value="{{month}}{{bill.id}}">{{month}}</option>
+                                            {% endfor %}
+                                          </select>
+                                        </td>
+                                        <td>
+                                          <input type="submit" class="mb-2 mr-2 btn btn-secondary" value="ADD">
+                                        </td>
+                                      </form>
+                                    <td>
+                                      <a href="/pub-edit/{{bill.id}}" class="mb-2 mr-2 btn-transition btn btn-outline-primary">edit</a>
+                                    </td>
+                                    <td>
+                                      <a href="/pub-delete/{{bill.id}}" class="mr-2 btn-icon btn-icon-only btn btn-outline-danger">delete</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+			</div>
+		</div>
+</div>
+</div>
+{% endblock %}

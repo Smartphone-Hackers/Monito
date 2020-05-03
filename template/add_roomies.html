@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  Add Tanent
+{% endblock %}
+{% block content %}
+<div>Add Tanent
+  <div class="page-title-subheading">Add New Tanent.</div>
+</div>
+<div class="page-title-actions">
+	</div>
+</div>
+</div>
+<ul class="body-tabs body-tabs-layout tabs-animated body-tabs-animated nav">
+</ul>
+<div class="tab-content">
+	<div class="tab-pane tabs-animation fade show active" id="tab-content-0" role="tabpanel">
+		<div class="main-card mb-3 card">
+			<div class="card-body">
+				<h5 class="card-title">Add Tanent</h5>
+        {% if messages %}
+          {% for message in messages %}
+			<div class="alert alert-info">
+				{{ message }}
+			</div>
+          {% endfor %}
+        {% endif %}
+				<form method="post" enctype="multipart/form-data">
+					<div class="form-row">
+            			{% csrf_token %}
+						<div class="col-md-6">
+							<div class="position-relative form-group">
+								<label>Name</label>
+								<input type="text" required class="form-control" value="{{rooms.name}}" name="name" placeholder="Enter Name">
+							</div>
+						</div>
+            			<div class="col-md-6">
+							<div class="position-relative form-group">
+								<label for="examplePassword11" class="">Phone Number</label>
+								<input type="number" required class="form-control" value="{{rooms.phone}}" name="phone" placeholder="Enter Phone Number">
+							</div>
+						</div>
+          			</div>
+					<button class="mt-2 btn btn-primary">Submit</button>
+				</form> <br>
+				<div class="table-responsive">
+                    <table class="mb-0 table">
+                        <thead>
+                        <tr>
+							<th>Joined Date</th>
+                            <th>Tanent Name</th>
+							<th>Phone</th>
+							<th>Edit</th>
+                            <th>Delete</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in room %}
+                                <tr>
+                                    <td>{{ r.date }}</td>
+									<td>{{ r.name }}</td>
+									<td>{{ r.phone }}</td>
+									<td>
+										<a href="/addroomate-edit/{{r.id}}" class="mb-2 mr-2 border-0 btn-transition btn btn-outline-success">Edit</a>
+										</td>
+                                    <td>
+                                    <a href="/addroomate/{{r.id}}" class="mb-2 mr-2 border-0 btn-transition btn btn-outline-danger">delete</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+			</div>
+		</div>
+</div>
+</div>
+{% endblock %}

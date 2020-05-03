@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div>Analytics Dashboard
+    <div class="page-title-subheading">Full Details.
+    </div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="row">
+<div class="col-md-6 col-xl-4">
+    <div class="card mb-3 widget-content bg-midnight-bloom">
+        <div class="widget-content-wrapper text-white">
+            <div class="widget-content-left">
+                <div class="widget-heading">Total Roommates</div>
+                <div class="widget-subheading">Current Roommates</div>
+            </div>
+            <div class="widget-content-right">
+                <div class="widget-numbers text-white"><span>{{roommate}}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-6 col-xl-4">
+    <div class="card mb-3 widget-content bg-arielle-smile">
+        <div class="widget-content-wrapper text-white">
+            <div class="widget-content-left">
+                <div class="widget-heading">Last Month Food Expense</div>
+                <div class="widget-subheading">Total Food Amount</div>
+            </div>
+            <div class="widget-content-right">
+                <div class="widget-numbers text-white"><span>$ {{last_month_expense|floatformat:2}}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-md-6 col-xl-4">
+    <div class="card mb-3 widget-content bg-grow-early">
+        <div class="widget-content-wrapper text-white">
+            <div class="widget-content-left">
+                <div class="widget-heading">PUB Bill</div>
+                <div class="widget-subheading">pub bill</div>
+            </div>
+            <div class="widget-content-right">
+                <div class="widget-numbers text-white"><span>$ {{index_pub_total|floatformat:2}}</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<form enctype="multipart/form-data">
+    <div class="form-row">
+        <div class="col-md-3">
+            <div class="position-relative form-group">
+                <select name="month" class="form-control" required>
+                    <option value="">Choose Month</option>
+                    {% for month in months %}
+                        <option value="{{month}}">{{month}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3"> 
+            <input class="mt-2 btn btn-primary" type="submit" value="Search">
+        </div>
+    </div>
+</form>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="main-card mb-3 card">
+            <div class="card-header">Roommates
+            </div>
+            <div class="table-responsive">
+                <table class="align-middle mb-0 table table-borderless table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th class="text-center">Joined Date</th>
+                        <th>Name</th>
+                        <th class="text-center">Phone Number</th>
+                        <th class="text-center">Food Expense({{last_date.month_year}})</th>
+                        <th class="text-center">PUB Bill</th>
+                        <th class="text-center">Total Amount</th>
+                        <th class="text-center">More Details</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                      {% for data in datas %}
+                        <tr>
+                            <td class="text-center text-muted">{{ data.name.date }}</td>
+                            <td>
+                                <div class="widget-content p-0">
+                                    <div class="widget-content-wrapper">
+                                        <div class="widget-content-left flex2">
+                                            <div class="widget-heading">{{ data.name.name}}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {{ data.name.phone }}
+                            </td>
+                            <td class="text-center">
+                                $ {{ data.food_expense|floatformat:2 }}
+                            </td>
+                            <td class="text-center">
+                                $ {{ pub_amt|floatformat:2 }}
+                            </td>
+                            <td class="text-center">
+                                $ {{ data.total_paid_pub|floatformat:2 }}
+                            </td>
+                            <td class="text-center">
+                                <a href="#" class="btn btn-primary btn-sm">More Details</a>
+                            </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
