@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.db.models import Sum
 from datetime import date
 from calendar import monthrange
+from django.contrib.auth import authenticate, login, logout
 
 # Create your views here.
 class Dashboard(View):
@@ -16,22 +17,96 @@ class Dashboard(View):
                         "September": 9, "October": 10, "November": 11, "December": 12,}
 
         get_month = request.GET.get("month")
-
+        print(get_month)
         roommates_exp = ExpensePaidAmount.objects.all().last()
         roommate = AddRoommate.objects.all().count()
         
         if roommates_exp:
-            roommates_expense = ExpensePaidAmount.objects.filter(month_year=roommates_exp.month_year)    
-            p = PUBBillAmount.objects.filter(food_date=roommates_exp.month_year)
-            if roommate != 0:
-                pub_amt = p.first().total_amt/roommate if p else 0
-                last_month_expense = AddExpenses.objects.filter(date__year=str(roommates_exp.month_year).split()[1]).filter(date__month=months.get(str(roommates_exp.month_year).split()[0])).aggregate(Sum("item_price"))["item_price__sum"]
-                index_pub_total = p.first().total_amt if p else 0
+            if get_month is not None:
+                given_month_year = get_month+" "+str(date.today().year)
+                roommates_expense = ExpensePaidAmount.objects.filter(month_year=given_month_year)    
+                p = PUBBillAmount.objects.filter(food_date=given_month_year)
+                roommates_exp = given_month_year
+                
+                individual = roommates_expense.first()
 
-            if p:
-                for r in roommates_expense:
-                    r.total_paid_pub = r.food_expense + pub_amt
-                    r.save()
+                if roommate != 0:
+                    pub_amt = p.first().total_amt/roommate if p else 0
+                    last_month_expense = AddExpenses.objects.filter(date__year=str(date.today().year)).filter(date__month=months.get(get_month)).aggregate(Sum("item_price"))["item_price__sum"]
+                    index_pub_total = p.first().total_amt if p else 0
+
+                    if p:
+                        for r in roommates_expense:
+                            r.pub = float(pub_amt)
+                            r.total_paid_pub = r.food_expense + float(pub_amt)
+                            r.save()
+                    else:
+                        for r in roommates_expense:
+                            r.total_paid_pub = r.food_expense
+                            r.save()
+
+                    group_individual = AddExpenses.objects.filter(date__year=str(date.today().year)).filter(date__month=months.get(get_month)).values("name").annotate(Sum("item_price"))
+                    print(group_individual)
+                    
+                    if roommates_expense and group_individual:
+                        for chk_bal in roommates_expense:
+                            for gi in group_individual:
+                                if str(chk_bal.name).split()[-1][1:-1] == str(gi.get("name")):
+                                    total = chk_bal.total_paid_pub if chk_bal.total_paid_pub else 0 
+                                    chk_bal.purchase = gi.get("item_price__sum")
+                                    chk_bal.save()
+                                    chk_bal.balance = total - gi.get("item_price__sum")
+                                    chk_bal.save()
+                                    print("IF", gi, chk_bal.name, chk_bal.name.name, total, total - gi.get("item_price__sum"))
+                                else:
+                                    total = chk_bal.total_paid_pub if chk_bal.total_paid_pub else 0
+                                    cb_p = chk_bal.purchase
+                                    if not cb_p:
+                                        chk_bal.balance = total
+                                        chk_bal.save()
+                                        print("ELSE", total, cb_p)
+
+            else:
+                roommates_expense = ExpensePaidAmount.objects.filter(month_year=roommates_exp.month_year)    
+                p = PUBBillAmount.objects.filter(food_date=roommates_exp.month_year)
+                roommates_exp = roommates_exp.month_year
+                individual = roommates_expense.first()
+
+                if roommate != 0:
+                    pub_amt = p.first().total_amt/roommate if p else 0
+                    last_month_expense = AddExpenses.objects.filter(date__year=roommates_exp.split()[1]).filter(date__month=months.get(roommates_exp.split()[0])).aggregate(Sum("item_price"))["item_price__sum"]
+                    index_pub_total = p.first().total_amt if p else 0
+                    
+                    if p:
+                        for r in roommates_expense:
+                            r.pub = pub_amt
+                            r.total_paid_pub = r.food_expense + pub_amt
+                            r.save()
+                    else:
+                        for r in roommates_expense:
+                            r.total_paid_pub = r.food_expense
+                            r.save()
+
+                    group_individual = AddExpenses.objects.filter(date__year=roommates_exp.split()[1]).filter(date__month=months.get(roommates_exp.split()[0])).values("name").annotate(Sum("item_price"))
+                    
+                    if roommates_expense and group_individual:
+                        for chk_bal in roommates_expense:
+                            for gi in [ i for i in group_individual ]:
+                                if str(chk_bal.name).split()[-1][1:-1] == str(gi.get("name")):
+                                    total = chk_bal.total_paid_pub if chk_bal.total_paid_pub else 0 
+                                    chk_bal.purchase = gi.get("item_price__sum")
+                                    chk_bal.save()
+                                    chk_bal.balance = total - gi.get("item_price__sum")
+                                    chk_bal.save()
+                                    print("IF", chk_bal.name, chk_bal.name.name, total, total - gi.get("item_price__sum"))
+                                else:
+                                    total = chk_bal.total_paid_pub if chk_bal.total_paid_pub else 0
+                                    cb_p = chk_bal.purchase
+                                    if not cb_p:
+                                        chk_bal.balance = total
+                                        chk_bal.save()
+                                        print("ELSE", total, cb_p)
+            
         else:
             roommates_expense = ""
             pub_amt = 0
@@ -39,14 +114,17 @@ class Dashboard(View):
                 roommate = 0
             last_month_expense = 0
             index_pub_total = 0
-
+            individual = ""
+            
         context = {
+            "months": months,
             "datas": roommates_expense,
             "last_date": roommates_exp,
             "pub_amt": pub_amt,
             "roommate": roommate,
             "last_month_expense": last_month_expense,
             "index_pub_total": index_pub_total,
+            "individual": individual,
         }
         return render(request, template_name=self.template_name, context=context)
 
@@ -96,13 +174,27 @@ class AddExpense(View):
     template_name="add_expense.html"
     def get(self, request):
         roommates = AddRoommate.objects.all()
-        expenses = AddExpenses.objects.filter(date__year=date.today().year).filter(date__month=date.today().month)
-        this_month_expense = AddExpenses.objects.filter(date__month=date.today().month).aggregate(Sum("item_price"))["item_price__sum"]
-        x = round(this_month_expense, 2) if this_month_expense is not None else this_month_expense
+        months = {"January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6, "July": 7, "August": 8,
+                        "September": 9, "October": 10, "November": 11, "December": 12,}
+        
+        year = date.today().year
+        get_month = request.GET.get("month")
+
+        if get_month is None:
+            expenses = AddExpenses.objects.filter(date__year=date.today().year).filter(date__month=date.today().month)
+            this_month_expense = AddExpenses.objects.filter(date__month=date.today().month).filter(date__year=year).aggregate(Sum("item_price"))["item_price__sum"]
+            x = round(this_month_expense, 2) if this_month_expense is not None else this_month_expense
+        else:
+            expenses = AddExpenses.objects.filter(date__year=year).filter(date__month=months.get(get_month))
+            this_month_expense = AddExpenses.objects.filter(date__month=months.get(get_month)).filter(date__year=year).aggregate(Sum("item_price"))["item_price__sum"]
+            x = round(this_month_expense, 2) if this_month_expense is not None else this_month_expense
+        
         context = {
             "datas": roommates,
             "expenses": expenses,
             "this_month_expense": x,
+            "months": months,
+            "year": year,
         }
         return render(request, template_name=self.template_name, context=context)
     
@@ -248,6 +340,7 @@ class PubBill(View):
             month_year = month[:-1] + " " + str(date.today().year)
             m.food_date = month_year
             m.save()
+            messages.info(request, "PUB Bill Added - {}".format(month_year))
 
         context = {
             "pubbill": pubbill,
@@ -257,19 +350,22 @@ class PubBill(View):
         return render(request, template_name=self.template_name, context=context)
     
     def post(self, request):
-        eb_date = request.POST.get("eb_date")
-        total_units = request.POST.get("total_units")
+        pre_date = request.POST.get("pre_date")
+        prev_read = request.POST.get("prev_read")
+        cur_date = request.POST.get("cur_date")
+        cur_read = request.POST.get("cur_read")
         removal_amt = request.POST.get("removal_amt")
         water_amt = request.POST.get("water_amt")
         gst = request.POST.get("gst")
-        
-        print(eb_date, total_units, removal_amt, water_amt, gst)
+        total_units = abs(float(prev_read) - float(cur_read))
 
+        print(pre_date, prev_read, cur_date, cur_read, total_units, removal_amt, water_amt, gst)
         total = (float(total_units) * 0.1495) + float(removal_amt) + float(water_amt)
         add_gst = (total * 7)/100
         total = total + add_gst
         
-        bill = PUBBillAmount(date=eb_date, total_units=total_units, refuse_amt=removal_amt, water_amt=water_amt, gst=gst, total_amt=total)
+        bill = PUBBillAmount(pre_date=pre_date, prev_read=prev_read, cur_date=cur_date, cur_read=cur_read, total_units=total_units,
+                             refuse_amt=removal_amt, water_amt=water_amt, gst=gst, total_amt=total)
         bill.save()
         return redirect("/pub-bill")
 
@@ -277,25 +373,34 @@ class PubBillEdit(View):
     template_name = "pub_bill.html"
     def get(self, request, pk):
         get_bill = PUBBillAmount.objects.get(id=pk)
-        bill_date = get_bill.date.strftime('%Y-%m-%d') #Date Formate - 2020-04-03
+        prev_date = get_bill.pre_date.strftime('%Y-%m-%d') #Date Formate - 2020-04-03
+        cur_date = get_bill.cur_date.strftime('%Y-%m-%d') #Date Formate - 2020-04-03
         context = {
             "get_bill": get_bill,
-            "bill_date": bill_date,
+            "prev_date": prev_date,
+            "cur_date": cur_date,
         }
         return render(request, template_name=self.template_name, context=context)
+    
     def post(self, request, pk):
-        get_bill = PUBBillAmount.objects.get(id=pk)
-        eb_date = request.POST.get("eb_date")
-        total_units = request.POST.get("total_units")
+        pre_date = request.POST.get("pre_date")
+        prev_read = request.POST.get("prev_read")
+        cur_date = request.POST.get("cur_date")
+        cur_read = request.POST.get("cur_read")
         removal_amt = request.POST.get("removal_amt")
         water_amt = request.POST.get("water_amt")
         gst = request.POST.get("gst")
+        total_units = abs(float(prev_read) - float(cur_read))
 
-        get_bill.date = eb_date
-        get_bill.total_units = total_units
-        get_bill.refuse_amt = removal_amt
+        get_bill = PUBBillAmount.objects.get(id=pk)
+        get_bill.pre_date = pre_date
+        get_bill.prev_read = prev_read
+        get_bill.cur_date = cur_date
+        get_bill.cur_read = cur_read
+        get_bill.removal_amt = removal_amt
         get_bill.water_amt = water_amt
         get_bill.gst = gst
+        get_bill.total_units = total_units
 
         # PUB Total Amount Calculation
         total = (float(total_units)*0.1495) + float(removal_amt) + float(water_amt)
@@ -311,3 +416,22 @@ class PubBillDelete(View):
         d = PUBBillAmount.objects.get(id=pk)
         d.delete()
         return redirect("/pub-bill")
+
+def roommate_login(request):
+    return render(request, template_name="login.html")
+
+def login_auth(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect("/dashboard")
+        else:
+            data = {"error": "Username [or] Password Incorrect"}
+            return render(request, "login.html", context=data)
+
+def roommate_logout(request):
+    logout(request)
+    return redirect("/")
