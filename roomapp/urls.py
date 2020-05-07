@@ -19,7 +19,7 @@ from room import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("", views.Dashboard.as_view()),
+    path("dashboard", views.Dashboard.as_view()),
     path("addroomate", views.AddRoomies.as_view()),
     path("addroomate-edit/<int:pk>", views.AddRoomiesEdit.as_view()),
     path("addroomate/<int:pk>", views.AddRoomiesDelete.as_view()),
@@ -30,4 +30,7 @@ urlpatterns = [
     path("pub-bill", views.PubBill.as_view()),
     path("pub-edit/<int:pk>", views.PubBillEdit.as_view()), 
     path("pub-delete/<int:pk>", views.PubBillDelete.as_view()),
+    path("", views.roommate_login),
+    path("login_auth", views.login_auth),
+    path("logout", views.roommate_logout),
 ]
